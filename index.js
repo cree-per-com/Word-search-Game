@@ -1,103 +1,78 @@
-const words = ["apple", "banana", "orange", "grape"];
-const puzzleSize = 10;
-let puzzle = [];
+let isSelecting = false;
 
-function generateRandomLetter() {
+function generatePuzzle() {
+  const wordsInput = document.getElementById("word-input");
+  const words = wordsInput.value
+    .split(",")
+    .map((word) => word.trim().toUpperCase());
+
+  const puzzleContainer = document.getElementById("puzzle-container");
+  puzzleContainer.innerHTML = "";
+
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  return alphabet[Math.floor(Math.random() * alphabet.length)];
-}
+  let puzzle = [];
 
-function generateRandomPuzzle() {
-  puzzle = []; // 기존 퍼즐을 초기화
-  for (let i = 0; i < puzzleSize; i++) {
-    const row = [];
-    for (let j = 0; j < puzzleSize; j++) {
-      row.push(generateRandomLetter());
+  // Create a 10x10 puzzle grid with random alphabet letters
+  for (let i = 0; i < 10; i++) {
+    let row = [];
+    for (let j = 0; j < 10; j++) {
+      const randomIndex = Math.floor(Math.random() * alphabet.length);
+      const randomLetter = alphabet[randomIndex];
+      row.push(randomLetter);
     }
     puzzle.push(row);
   }
-}
 
-function placeWordsInPuzzle() {
+  // Insert words into the puzzle
   words.forEach((word) => {
-    const direction = Math.random() < 0.5 ? "horizontal" : "vertical";
-    let startRow = Math.floor(Math.random() * puzzleSize);
-    let startCol = Math.floor(Math.random() * puzzleSize);
-
-    // 단어를 배치할 수 있는 위치를 찾을 때까지 반복
-    while (wordDoesNotFit(word, direction, startRow, startCol)) {
-      startRow = Math.floor(Math.random() * puzzleSize);
-      startCol = Math.floor(Math.random() * puzzleSize);
-    }
+    let direction = Math.random() > 0.5 ? "horizontal" : "vertical";
+    let startX = Math.floor(Math.random() * (10 - word.length + 1));
+    let startY = Math.floor(Math.random() * 10);
 
     if (direction === "horizontal") {
       for (let i = 0; i < word.length; i++) {
-        puzzle[startRow][startCol + i] = word[i];
+        puzzle[startX][startY + i] = word[i];
       }
     } else {
       for (let i = 0; i < word.length; i++) {
-        puzzle[startRow + i][startCol] = word[i];
+        puzzle[startX + i][startY] = word[i];
       }
     }
   });
-}
 
-function renderPuzzle() {
-  const puzzleContainer = document.getElementById("puzzle-container");
-  puzzle.forEach((row, rowIndex) => {
-    row.forEach((letter, colIndex) => {
+  // Render the puzzle grid
+  puzzle.forEach((row) => {
+    row.forEach((letter) => {
       const cell = document.createElement("div");
-      cell.classList.add("cell");
+      cell.className = "puzzle-cell";
       cell.textContent = letter;
-      cell.addEventListener("click", () => handleCellClick(rowIndex, colIndex));
+      cell.onmouseover = () => selectCell(cell);
       puzzleContainer.appendChild(cell);
     });
   });
 }
 
-function wordDoesNotFit(word, direction, startRow, startCol) {
-  // 단어가 퍼즐의 범위를 벗어나거나 이미 값이 채워진 셀에 단어가 겹치는 경우 true 반환
-  if (direction === "horizontal" && startCol + word.length > puzzleSize) {
-    return true;
+function startSelection(event) {
+  isSelecting = true;
+  clearSelection();
+  selectCell(event.target);
+  event.preventDefault();
+}
+
+function endSelection() {
+  isSelecting = false;
+  clearSelection();
+}
+
+function selectCell(cell) {
+  if (isSelecting) {
+    cell.classList.add("selected");
   }
-  if (direction === "vertical" && startRow + word.length > puzzleSize) {
-    return true;
-  }
-
-  for (let i = 0; i < word.length; i++) {
-    if (
-      direction === "horizontal" &&
-      puzzle[startRow][startCol + i] !== undefined
-    ) {
-      return true;
-    }
-    if (
-      direction === "vertical" &&
-      puzzle[startRow + i][startCol] !== undefined
-    ) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
-function handleCellClick(row, col) {
-  // 클릭된 셀에 대한 처리 로직
+function clearSelection() {
+  const selectedCells = document.querySelectorAll(".selected");
+  selectedCells.forEach((cell) => {
+    cell.classList.remove("selected");
+  });
 }
-
-function initGame() {
-  generateRandomPuzzle();
-  placeWordsInPuzzle();
-  renderPuzzle();
-}
-// ... (앞부분은 그대로 두세요)
-
-function initGame() {
-  generateRandomPuzzle();
-  placeWordsInPuzzle();
-  renderPuzzle();
-}
-
-// 초기 게임 시작
-initGame();
